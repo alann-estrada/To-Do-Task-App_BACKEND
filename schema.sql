@@ -50,3 +50,12 @@ FROM task
     LEFT JOIN shared_task ON task.id = shared_task.task_id
 WHERE task.user_id = [user_id]
     OR shared_task.shared_with_id = [user_id];
+SELECT id,
+    task_id
+FROM shared_task
+ORDER BY user_id;
+DELETE t1
+FROM shared_task t1
+    INNER JOIN shared_task t2
+WHERE t1.id > t2.id
+    AND t1.task_id = t2.task_id;

@@ -62,12 +62,33 @@ export async function createTask(user_id, title) {
 }
 
 export async function deleteTask(id) {
-  const [result] = await pool.query(
+  const sharedTaskReferences = await pool.query(
     `
-    DELETE FROM task WHERE id = ?;
+    SELECT id
+    FROM shared_task
+    WHERE task_id = ?;
     `,
     [id]
   );
+
+  for (const sharedTask of sharedTaskReferences[0]) {
+    await pool.query(
+      `
+      DELETE FROM shared_task
+      WHERE id = ?;
+      `,
+      [sharedTask.id]
+    );
+  }
+
+  const [result] = await pool.query(
+    `
+    DELETE FROM task
+    WHERE id = ?;
+    `,
+    [id]
+  );
+
   return result;
 }
 

@@ -16,9 +16,12 @@ const corsOptions = {
   origin: "*",
   methods: ["POST", "GET"],
   credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
 
 app.get("/task/:id", async (req, res) => {
@@ -57,13 +60,31 @@ app.delete("/task/:id", async (req, res) => {
 });
 
 app.post("/task/shared_task", async (req, res) => {
+  // console.log(req.headers);
+  // console.log(req.body);
   const { task_id, user_id, email } = req.body;
-  // const { task_id, user_id, email } = req.body;
+  let sharedTask;
+
+  if (!task_id || !user_id || !email) {
+    return res
+      .status(400)
+      .send({ error: "Missing or invalid data in the request." });
+  }
+
   const userToShare = await getUserByEmail(email);
-  const sharedTask = await shareTask(task_id, user_id, userToShare.id);
-  if (!sharedTask)
+
+  if (userToShare) {
+    sharedTask = await shareTask(task_id, user_id, userToShare.id);
+  } else {
+    console.log(userToShare);
+    console.log("No user");
+  }
+
+  if (!sharedTask) {
     return res.status(500).send({ error: "Error sharing the task." });
-  res.status(201).send(sharedTask);
+  } else {
+    return res.status(201).send({ message: "Successfully shared Task" });
+  }
 });
 
 app.post("/task", async (req, res) => {
